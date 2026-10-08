@@ -1,0 +1,239 @@
+{% extends 'layout.html' %}
+
+{% block title %}HydroRescue | Plumber On-Duty Terminal{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <!-- Top Plumber Header & On-Duty Toggle -->
+    <div class="bg-slate-800/90 border border-slate-700 rounded-2xl p-6 shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+        <div class="flex items-center gap-4">
+            <div class="relative">
+                <img src="https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=256&q=80" alt="Marcus Vance" class="w-16 h-16 rounded-2xl object-cover border-2 border-emerald-500 shadow-lg">
+                <span id="plumber-status-indicator" class="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full border-2 border-slate-900"></span>
+            </div>
+            <div>
+                <div class="flex items-center gap-2">
+                    <h2 class="text-xl font-bold text-white">Marcus Vance, Master Plumber</h2>
+                    <span class="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-xs font-bold px-2.5 py-0.5 rounded-full">
+                        <i data-lucide="shield-check" class="w-3 h-3 inline mr-1"></i> State Verified (TX-89421)
+                    </span>
+                </div>
+                <p class="text-xs text-slate-400 mt-0.5">Apex Master Plumbing • On-Call Emergency Unit #4 • Travelers Commercial Insured ($2M)</p>
+                <div class="flex items-center gap-4 mt-2 text-xs text-slate-300">
+                    <span><strong class="text-white">Emergency Base:</strong> $89.00</span>
+                    <span><strong class="text-white">Overtime Rate:</strong> $160.00/hr</span>
+                    <span><strong class="text-emerald-400">Escrow Protected:</strong> 100% Guaranteed Payout</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- On-Call Duty Switch -->
+        <div class="flex flex-col sm:flex-row items-center gap-4 bg-slate-900/80 p-3 rounded-2xl border border-slate-700/80">
+            <div class="text-right sm:text-left">
+                <div class="text-xs font-bold uppercase tracking-wider text-slate-400">Dispatch Status</div>
+                <div id="duty-status-text" class="text-sm font-black text-emerald-400">ON-CALL (RECEIVING ALERTS)</div>
+            </div>
+            <button id="duty-toggle-btn" onclick="toggleDutyState()" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs sm:text-sm shadow-lg shadow-emerald-900/50 transition-all flex items-center gap-2">
+                <i data-lucide="power" class="w-4 h-4"></i>
+                <span id="duty-toggle-label">Go Off-Duty</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Active Job or Incoming Alert Container -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        <!-- Active Dispatch Workflow Column (7 cols) -->
+        <div class="lg:col-span-7 space-y-6">
+            
+            <!-- Current Dispatch Card -->
+            <div class="bg-slate-800/80 border border-slate-700 rounded-2xl p-6 shadow-xl space-y-5">
+                <div class="flex items-center justify-between pb-4 border-b border-slate-700">
+                    <div class="flex items-center gap-2.5">
+                        <span class="p-2 bg-cyan-500/10 text-cyan-400 rounded-xl border border-cyan-500/20">
+                            <i data-lucide="navigation" class="w-5 h-5"></i>
+                        </span>
+                        <div>
+                            <span class="text-xs font-bold text-cyan-400 uppercase tracking-wider">Current Assigned Dispatch</span>
+                            <h3 id="job-dispatch-code" class="text-lg font-black text-white">EMERG-4819</h3>
+                        </div>
+                    </div>
+                    <div id="job-status-pill" class="text-xs font-bold px-3 py-1 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
+                        En Route (ETA: 14 mins)
+                    </div>
+                </div>
+
+                <!-- Emergency Details -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-slate-900/90 rounded-xl p-4 border border-slate-700/60 text-xs">
+                    <div>
+                        <span class="text-slate-400 block mb-0.5">Emergency Type:</span>
+                        <span id="job-category" class="text-white font-bold text-sm text-rose-300 flex items-center gap-1.5">
+                            <i data-lucide="zap" class="w-4 h-4 text-rose-400"></i> Active Burst Pipe / Flooding
+                        </span>
+                    </div>
+                    <div>
+                        <span class="text-slate-400 block mb-0.5">Homeowner Water Shutoff Status:</span>
+                        <span id="job-shutoff-status" class="text-emerald-400 font-bold flex items-center gap-1.5">
+                            <i data-lucide="check-circle" class="w-4 h-4"></i> Main Valve CLOSED by Homeowner
+                        </span>
+                    </div>
+                    <div>
+                        <span class="text-slate-400 block mb-0.5">Address:</span>
+                        <span id="job-address" class="text-white font-medium">452 Castro St, San Francisco, CA</span>
+                    </div>
+                    <div>
+                        <span class="text-slate-400 block mb-0.5">Homeowner Contact:</span>
+                        <span id="job-customer" class="text-white font-medium">Jonathan Reynolds • (555) 912-7721</span>
+                    </div>
+                </div>
+
+                <!-- Plumber Status Progression Controller -->
+                <div class="space-y-3">
+                    <label class="text-xs font-bold text-slate-300 uppercase tracking-wider">Advance Job Progression</label>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        <button onclick="updatePlumberJobStatus('accepted')" class="py-2.5 px-3 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5">
+                            <i data-lucide="check" class="w-3.5 h-3.5"></i> Accepted
+                        </button>
+                        <button onclick="updatePlumberJobStatus('en_route')" class="py-2.5 px-3 bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5">
+                            <i data-lucide="truck" class="w-3.5 h-3.5"></i> En Route
+                        </button>
+                        <button onclick="updatePlumberJobStatus('arrived')" class="py-2.5 px-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5">
+                            <i data-lucide="map-pin" class="w-3.5 h-3.5"></i> Arrived
+                        </button>
+                        <button onclick="updatePlumberJobStatus('in_progress')" class="py-2.5 px-3 bg-amber-600 hover:bg-amber-500 text-white rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5">
+                            <i data-lucide="wrench" class="w-3.5 h-3.5"></i> In Repair
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Complete Repair & Transparent Invoicing Section -->
+                <div class="pt-4 border-t border-slate-700 space-y-4">
+                    <h4 class="text-sm font-bold text-white flex items-center gap-2">
+                        <i data-lucide="receipt" class="w-4 h-4 text-emerald-400"></i>
+                        Complete Work & Generate Pre-Approved Invoice
+                    </h4>
+                    <p class="text-xs text-slate-400">
+                        Itemized billing eliminates homeowner disputes. Escrow is released immediately upon homeowner digital verification.
+                    </p>
+
+                    <form id="complete-repair-form" onsubmit="submitRepairCompletion(event)" class="space-y-3 bg-slate-900/60 p-4 rounded-xl border border-slate-700/60 text-xs">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                                <label class="text-slate-300 font-semibold block mb-1">Labor Time (Hours)</label>
+                                <input type="number" step="0.25" id="inv-labor-hours" value="1.5" min="0.5" max="8" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-white">
+                                <span class="text-[10px] text-slate-400">Billed at standard emergency $160/hr</span>
+                            </div>
+                            <div>
+                                <label class="text-slate-300 font-semibold block mb-1">Truck Stock Parts Cost ($)</label>
+                                <input type="number" step="1.0" id="inv-parts-cost" value="65.0" min="0" max="400" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-white">
+                                <span class="text-[10px] text-slate-400">e.g. ProPress couplings, pipe section</span>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="text-slate-300 font-semibold block mb-1">Work Description & Code Compliance Notes</label>
+                            <textarea id="inv-notes" rows="2" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-white">Excavated ruptured 3/4" copper elbow. Replaced with Ridgid ProPress copper coupling. Tested system at 65 PSI static pressure with zero leaks. Verified water restored.</textarea>
+                        </div>
+
+                        <div class="flex items-center justify-between pt-2 border-t border-slate-800">
+                            <div>
+                                <span class="text-slate-400 text-xs block">Guaranteed Payout from Escrow:</span>
+                                <span class="text-base font-black text-emerald-400" id="calc-total-invoice">$394.00</span>
+                            </div>
+                            <button type="submit" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl shadow-md flex items-center gap-2">
+                                <i data-lucide="check-circle" class="w-4 h-4"></i>
+                                <span>Complete & Request Escrow Payout</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Truck Stock Inventory & Incoming Emergency Broadcasts (5 cols) -->
+        <div class="lg:col-span-5 space-y-6">
+            
+            <!-- Ready-to-Roll Mobile Truck Inventory -->
+            <div class="bg-slate-800/80 border border-slate-700 rounded-2xl p-6 shadow-xl space-y-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h4 class="text-base font-bold text-white flex items-center gap-2">
+                            <i data-lucide="truck" class="w-4 h-4 text-cyan-400"></i>
+                            Service Rig Equipment Checklist
+                        </h4>
+                        <p class="text-xs text-slate-400">Required tools to maintain 24/7 Rapid Emergency dispatch rating.</p>
+                    </div>
+                </div>
+
+                <div class="space-y-2.5 text-xs">
+                    <label class="flex items-center justify-between p-2.5 bg-slate-900/60 rounded-xl border border-slate-700/60 cursor-pointer">
+                        <span class="flex items-center gap-2 text-slate-200">
+                            <i data-lucide="check" class="w-4 h-4 text-emerald-400"></i> Ridgid ProPress Tool & Jaw Sets (1/2"-1")
+                        </span>
+                        <span class="text-[10px] text-emerald-400 font-bold uppercase">Ready</span>
+                    </label>
+                    <label class="flex items-center justify-between p-2.5 bg-slate-900/60 rounded-xl border border-slate-700/60 cursor-pointer">
+                        <span class="flex items-center gap-2 text-slate-200">
+                            <i data-lucide="check" class="w-4 h-4 text-emerald-400"></i> Milwaukee 100ft Electric Drain Snake
+                        </span>
+                        <span class="text-[10px] text-emerald-400 font-bold uppercase">Ready</span>
+                    </label>
+                    <label class="flex items-center justify-between p-2.5 bg-slate-900/60 rounded-xl border border-slate-700/60 cursor-pointer">
+                        <span class="flex items-center gap-2 text-slate-200">
+                            <i data-lucide="check" class="w-4 h-4 text-emerald-400"></i> PEX-A Expansion / Copper Pipe Stock
+                        </span>
+                        <span class="text-[10px] text-emerald-400 font-bold uppercase">Ready</span>
+                    </label>
+                    <label class="flex items-center justify-between p-2.5 bg-slate-900/60 rounded-xl border border-slate-700/60 cursor-pointer">
+                        <span class="flex items-center gap-2 text-slate-200">
+                            <i data-lucide="check" class="w-4 h-4 text-emerald-400"></i> Flir Thermal Camera & Acoustic Leak Sniffer
+                        </span>
+                        <span class="text-[10px] text-emerald-400 font-bold uppercase">Ready</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Platform Payout & Escrow Protection Summary -->
+            <div class="bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 rounded-2xl p-6 shadow-xl space-y-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center justify-center">
+                        <i data-lucide="badge-dollar-sign" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h4 class="text-sm font-bold text-white">Why Plumbers Love HydroRescue</h4>
+                        <p class="text-xs text-slate-400">Solving the trades shortage with guaranteed escrow.</p>
+                    </div>
+                </div>
+
+                <div class="space-y-2 text-xs text-slate-300">
+                    <div class="flex items-start gap-2">
+                        <i data-lucide="check" class="w-4 h-4 text-emerald-400 shrink-0 mt-0.5"></i>
+                        <span><strong>No Bad Debt:</strong> Homeowners lock deposits before truck rolls. Zero stiffed invoices.</span>
+                    </div>
+                    <div class="flex items-start gap-2">
+                        <i data-lucide="check" class="w-4 h-4 text-emerald-400 shrink-0 mt-0.5"></i>
+                        <span><strong>No Lead-Gen Bidding Wars:</strong> Unlike Angi or Thumbtack, you do not pay $60 to buy shared leads. Direct dispatch only.</span>
+                    </div>
+                    <div class="flex items-start gap-2">
+                        <i data-lucide="check" class="w-4 h-4 text-emerald-400 shrink-0 mt-0.5"></i>
+                        <span><strong>Pre-Triage Water Shut-Off:</strong> Customers are guided to shut off valves before you arrive, eliminating chaotic knee-deep water.</span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        initPlumberPortal();
+    });
+</script>
+{% endblock %}

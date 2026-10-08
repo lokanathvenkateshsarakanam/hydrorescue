@@ -1,0 +1,342 @@
+{% extends 'layout.html' %}
+
+{% block title %}HydroRescue | Verified 24/7 Emergency Plumbing Dispatch{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+
+    <!-- Urgent Water First-Aid Alert Banner -->
+    <div class="bg-gradient-to-r from-rose-950/80 via-red-900/60 to-slate-900 border border-rose-500/40 rounded-2xl p-4 sm:p-5 shadow-xl relative overflow-hidden">
+        <div class="absolute -right-8 -top-8 w-32 h-32 bg-rose-500/10 rounded-full blur-2xl"></div>
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 relative z-10">
+            <div class="flex items-start gap-3.5">
+                <div class="p-2.5 rounded-xl bg-rose-600/30 text-rose-400 border border-rose-500/40 animate-pulse mt-0.5">
+                    <i data-lucide="alert-octagon" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <h2 class="text-base sm:text-lg font-bold text-white flex items-center gap-2">
+                        Active Water Flooding Right Now?
+                        <span class="text-xs bg-rose-500/30 text-rose-300 px-2 py-0.5 rounded-full border border-rose-500/40">Step 1 is critical</span>
+                    </h2>
+                    <p class="text-slate-300 text-xs sm:text-sm mt-0.5 max-w-2xl">
+                        Shutting off your home's main water supply saves an average of <strong class="text-rose-300">$8,500 in drywall and flooring damage</strong> while the plumber rolls.
+                    </p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2 self-stretch sm:self-auto">
+                <a href="/shutoff-guide" class="flex-1 sm:flex-initial text-center px-4 py-2.5 bg-rose-600 hover:bg-rose-500 text-white font-semibold rounded-xl text-xs sm:text-sm shadow-lg shadow-rose-900/50 transition-all flex items-center justify-center gap-2">
+                    <i data-lucide="life-buoy" class="w-4 h-4"></i>
+                    <span>Open Visual Shutoff Guide</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Active Dispatch Status Bar (Dynamic via JS) -->
+    <div id="active-dispatch-banner" class="hidden bg-slate-800/90 border border-cyan-500/40 rounded-2xl p-5 shadow-2xl transition-all">
+        <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
+            <div class="flex items-start gap-4">
+                <div id="dispatch-plumber-avatar-wrap" class="relative">
+                    <img id="dispatch-plumber-avatar" src="" alt="Plumber" class="w-14 h-14 rounded-2xl object-cover border-2 border-cyan-400 shadow-md">
+                    <span class="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full border-2 border-slate-900"></span>
+                </div>
+                <div>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <span id="dispatch-code-badge" class="bg-cyan-500/20 text-cyan-300 text-xs font-bold px-2.5 py-0.5 rounded-md border border-cyan-500/30"></span>
+                        <span id="dispatch-status-badge" class="text-xs font-bold px-2.5 py-0.5 rounded-md"></span>
+                        <span class="text-xs text-slate-400">• ETA: <strong id="dispatch-eta-text" class="text-white"></strong></span>
+                    </div>
+                    <h3 id="dispatch-plumber-name" class="text-base font-bold text-white mt-1"></h3>
+                    <p id="dispatch-category-text" class="text-xs text-slate-400"></p>
+                </div>
+            </div>
+
+            <!-- Progress Timeline -->
+            <div class="w-full lg:w-96 flex items-center justify-between text-xs text-slate-400 relative">
+                <div class="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-1 bg-slate-700 z-0"></div>
+                <div id="step-accepted" class="relative z-10 flex flex-col items-center gap-1">
+                    <div class="w-7 h-7 rounded-full bg-slate-800 border-2 border-cyan-500 flex items-center justify-center text-cyan-400 text-[10px] font-bold">1</div>
+                    <span class="text-[10px]">Dispatched</span>
+                </div>
+                <div id="step-enroute" class="relative z-10 flex flex-col items-center gap-1">
+                    <div class="w-7 h-7 rounded-full bg-slate-800 border-2 border-slate-600 flex items-center justify-center text-slate-400 text-[10px] font-bold">2</div>
+                    <span class="text-[10px]">En Route</span>
+                </div>
+                <div id="step-arrived" class="relative z-10 flex flex-col items-center gap-1">
+                    <div class="w-7 h-7 rounded-full bg-slate-800 border-2 border-slate-600 flex items-center justify-center text-slate-400 text-[10px] font-bold">3</div>
+                    <span class="text-[10px]">On-Site</span>
+                </div>
+                <div id="step-completed" class="relative z-10 flex flex-col items-center gap-1">
+                    <div class="w-7 h-7 rounded-full bg-slate-800 border-2 border-slate-600 flex items-center justify-center text-slate-400 text-[10px] font-bold">4</div>
+                    <span class="text-[10px]">Resolved</span>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex flex-wrap items-center gap-2.5 w-full lg:w-auto">
+                <button id="btn-water-shut-confirm" onclick="confirmWaterShutoff()" class="px-3 py-2 bg-emerald-600/30 hover:bg-emerald-600/40 text-emerald-300 border border-emerald-500/40 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all">
+                    <i data-lucide="check" class="w-3.5 h-3.5"></i>
+                    <span id="shutoff-btn-label">Confirm Water Is Shut Off</span>
+                </button>
+                <button id="btn-release-escrow" onclick="releaseEscrowPayment()" class="hidden px-3.5 py-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl text-xs font-semibold shadow-md flex items-center gap-1.5 transition-all">
+                    <i data-lucide="lock" class="w-3.5 h-3.5"></i>
+                    <span>Sign Off & Release Escrow</span>
+                </button>
+                <a id="dispatch-call-btn" href="tel:" class="px-3 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-xl text-xs font-semibold flex items-center gap-1.5">
+                    <i data-lucide="phone-call" class="w-3.5 h-3.5 text-cyan-400"></i>
+                    <span>Call Plumber</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Grid: Request Form + Interactive Radar -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        <!-- Left Column: Emergency Request & Anti-Gouging Selector (5 cols) -->
+        <div class="lg:col-span-5 space-y-6">
+            <div class="bg-slate-800/80 border border-slate-700 rounded-2xl p-6 shadow-xl relative backdrop-blur">
+                <div class="flex items-center justify-between pb-4 border-b border-slate-700">
+                    <div>
+                        <span class="text-xs font-bold text-cyan-400 tracking-wider uppercase">On-Demand SOS Dispatch</span>
+                        <h2 class="text-xl font-black text-white mt-0.5">Select Plumbing Emergency</h2>
+                    </div>
+                    <div class="w-10 h-10 rounded-xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 flex items-center justify-center">
+                        <i data-lucide="activity" class="w-5 h-5"></i>
+                    </div>
+                </div>
+
+                <!-- Emergency Problem Cards (Loaded dynamically from API) -->
+                <div class="mt-4 space-y-2.5 max-h-[380px] overflow-y-auto pr-1" id="category-cards-container">
+                    <div class="text-center py-8 text-slate-400 text-sm">
+                        <i data-lucide="loader" class="w-5 h-5 animate-spin mx-auto mb-2 text-cyan-400"></i>
+                        Loading verified pricing benchmarks...
+                    </div>
+                </div>
+
+                <!-- Upfront Anti-Gouging Price Summary Box -->
+                <div class="mt-6 bg-slate-900/90 rounded-xl p-4 border border-slate-700/80 space-y-3">
+                    <div class="flex items-center justify-between text-xs">
+                        <span class="text-slate-400 font-medium">Standard Emergency Dispatch Fee:</span>
+                        <span id="price-dispatch-fee" class="text-white font-bold">$89.00</span>
+                    </div>
+                    <div class="flex items-center justify-between text-xs">
+                        <span class="text-slate-400 font-medium">Estimated Labor (Night/Weekend Rate):</span>
+                        <span id="price-labor-est" class="text-white font-bold">$160.00 - $240.00</span>
+                    </div>
+                    <div class="flex items-center justify-between text-xs">
+                        <span class="text-slate-400 font-medium">Estimated Standard Truck Stock Parts:</span>
+                        <span id="price-parts-est" class="text-white font-bold">$45.00 - $110.00</span>
+                    </div>
+                    
+                    <div class="pt-3 border-t border-slate-800 flex items-center justify-between">
+                        <div>
+                            <span class="text-[11px] uppercase tracking-wider font-extrabold text-cyan-400">HydroRescue Price Cap:</span>
+                            <div class="text-lg font-black text-white" id="price-total-cap">$390.00 MAX</div>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-[10px] text-rose-400 font-medium line-through">Typical Gouged Broker Rate:</span>
+                            <div class="text-sm font-bold text-rose-400" id="price-market-gouge">$1,250.00+</div>
+                        </div>
+                    </div>
+
+                    <div class="bg-cyan-950/40 border border-cyan-800/40 rounded-lg p-2.5 flex items-start gap-2 text-[11px] text-cyan-300">
+                        <i data-lucide="shield-check" class="w-4 h-4 text-cyan-400 shrink-0 mt-0.5"></i>
+                        <span><strong>Anti-Price-Gouging Policy:</strong> Rates cannot exceed this cap without explicit homeowner video pre-approval for complex excavation.</span>
+                    </div>
+                </div>
+
+                <!-- Dispatch Submission Form -->
+                <form id="emergency-dispatch-form" onsubmit="submitEmergencyDispatch(event)" class="mt-6 space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1">Your Full Name</label>
+                        <input type="text" id="cust-name" required placeholder="e.g. Rachel Hernandez" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500">
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-300 mb-1">Emergency Callback Phone</label>
+                            <input type="tel" id="cust-phone" required placeholder="(555) 000-0000" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-300 mb-1">Street Address</label>
+                            <input type="text" id="cust-address" required placeholder="452 Castro St, Apt 2B" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1">Emergency Description & Leak Location</label>
+                        <textarea id="cust-desc" rows="2" placeholder="Pipe cracked behind drywall, water leaking under sink floor, need shutoff assistance..." class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"></textarea>
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                        <input type="checkbox" id="cust-shutoff-check" class="rounded bg-slate-900 border-slate-700 text-cyan-500 focus:ring-cyan-500 w-4 h-4">
+                        <label for="cust-shutoff-check" class="text-xs text-slate-300 cursor-pointer">
+                            I have already closed the main water shutoff valve.
+                        </label>
+                    </div>
+
+                    <button type="submit" id="btn-submit-sos" class="w-full py-3.5 px-4 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold rounded-xl shadow-lg shadow-cyan-600/30 flex items-center justify-center gap-2 text-sm sm:text-base transition-all group">
+                        <i data-lucide="zap" class="w-5 h-5 group-hover:scale-110 transition-transform"></i>
+                        <span>Dispatch Verified Emergency Plumber Now</span>
+                    </button>
+                    <p class="text-[11px] text-center text-slate-400">
+                        <i data-lucide="lock" class="w-3 h-3 inline mr-1 text-emerald-400"></i> No blind credit card charges. Deposit held in escrow until work is verified.
+                    </p>
+                </form>
+            </div>
+        </div>
+
+        <!-- Right Column: Live On-Duty Plumber Radar & Verification Map (7 cols) -->
+        <div class="lg:col-span-7 space-y-6">
+            
+            <!-- Map Card -->
+            <div class="bg-slate-800/80 border border-slate-700 rounded-2xl p-5 shadow-xl">
+                <div class="flex flex-wrap items-center justify-between gap-3 pb-4">
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping"></span>
+                            <h3 class="text-lg font-bold text-white">Live On-Call Plumber Radar</h3>
+                        </div>
+                        <p class="text-xs text-slate-400">Real-time GPS positions of state-verified emergency plumbers on duty right now.</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2.5 py-1 rounded-lg font-semibold flex items-center gap-1">
+                            <i data-lucide="radar" class="w-3.5 h-3.5"></i>
+                            <span id="stats-active-count">3 On-Duty</span>
+                        </span>
+                        <span class="text-xs bg-cyan-500/10 text-cyan-300 border border-cyan-500/20 px-2.5 py-1 rounded-lg font-semibold">
+                            Avg Response: 18m
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Leaflet Map Container -->
+                <div id="radar-map" class="w-full h-80 rounded-xl border border-slate-700 z-10"></div>
+                <div class="flex items-center justify-between text-[11px] text-slate-400 mt-2 px-1">
+                    <span><i data-lucide="map-pin" class="w-3.5 h-3.5 inline text-cyan-400"></i> You (Dispatch Location)</span>
+                    <span><i data-lucide="truck" class="w-3.5 h-3.5 inline text-emerald-400"></i> Stocked Mobile Service Truck (Live GPS)</span>
+                </div>
+            </div>
+
+            <!-- Verified Plumbers List Card -->
+            <div class="bg-slate-800/80 border border-slate-700 rounded-2xl p-5 shadow-xl space-y-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h4 class="text-base font-bold text-white flex items-center gap-2">
+                            <i data-lucide="shield-check" class="w-4 h-4 text-emerald-400"></i>
+                            Verified Master & Journeyman Trades
+                        </h4>
+                        <p class="text-xs text-slate-400">Every contractor undergoes state license audit, $2M insurance verification & background check.</p>
+                    </div>
+                    <button onclick="loadPlumbersList()" class="p-2 hover:bg-slate-700 rounded-lg text-slate-400 hover:text-white transition-colors">
+                        <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+                    </button>
+                </div>
+
+                <div id="plumbers-list-container" class="space-y-3.5">
+                    <!-- Populated dynamically via JS -->
+                </div>
+            </div>
+
+            <!-- Value Proposition Comparison Table -->
+            <div class="bg-slate-800/80 border border-slate-700 rounded-2xl p-5 shadow-xl">
+                <h4 class="text-sm font-bold text-white mb-3 flex items-center gap-2">
+                    <i data-lucide="scale" class="w-4 h-4 text-cyan-400"></i>
+                    How HydroRescue Solves The Emergency Plumbing Crisis
+                </h4>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs">
+                        <thead>
+                            <tr class="border-b border-slate-700 text-slate-400">
+                                <th class="py-2.5 px-3">Criteria</th>
+                                <th class="py-2.5 px-3 text-rose-400">Unregulated Lead Brokers / Google Search</th>
+                                <th class="py-2.5 px-3 text-cyan-400">HydroRescue Verified Network</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-800 text-slate-300">
+                            <tr>
+                                <td class="py-2.5 px-3 font-semibold text-white">2:00 AM Availability</td>
+                                <td class="py-2.5 px-3 text-slate-400">Answering service sells lead to 5 guys; nobody shows up.</td>
+                                <td class="py-2.5 px-3 text-emerald-400 font-medium">Real-time telemetry; only active on-duty plumbers dispatched.</td>
+                            </tr>
+                            <tr>
+                                <td class="py-2.5 px-3 font-semibold text-white">Emergency Pricing</td>
+                                <td class="py-2.5 px-3 text-rose-300 font-medium">2x–3x predatory surge ($1,500+ minimum distress quote).</td>
+                                <td class="py-2.5 px-3 text-emerald-400 font-medium">Capped emergency matrix (1.4x max surge cap, escrow deposit).</td>
+                            </tr>
+                            <tr>
+                                <td class="py-2.5 px-3 font-semibold text-white">Trade Verification</td>
+                                <td class="py-2.5 px-3 text-slate-400">Unvetted handymen, no license verification, fake Yelp reviews.</td>
+                                <td class="py-2.5 px-3 text-emerald-400 font-medium">State Master/Journeyman License audited + $2M verified insurance.</td>
+                            </tr>
+                            <tr>
+                                <td class="py-2.5 px-3 font-semibold text-white">Warranty & Recourse</td>
+                                <td class="py-2.5 px-3 text-slate-400">Plumber ghosts after cashing check.</td>
+                                <td class="py-2.5 px-3 text-emerald-400 font-medium">Platform 90-Day Emergency Workmanship Warranty.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+<!-- Credential Modal -->
+<div id="credentials-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-lg w-full p-6 space-y-5 shadow-2xl relative">
+        <button onclick="closeCredentialsModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white p-1">
+            <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+        <div class="flex items-center gap-3">
+            <div class="w-12 h-12 rounded-xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center border border-cyan-500/30">
+                <i data-lucide="badge-check" class="w-6 h-6"></i>
+            </div>
+            <div>
+                <h3 id="modal-plumber-name" class="text-lg font-bold text-white"></h3>
+                <p id="modal-business-name" class="text-xs text-slate-400"></p>
+            </div>
+        </div>
+
+        <div class="space-y-3 bg-slate-800/80 rounded-xl p-4 border border-slate-700 text-xs">
+            <div class="flex items-center justify-between pb-2 border-b border-slate-700">
+                <span class="text-slate-400">State Trade License:</span>
+                <span id="modal-license-info" class="text-white font-mono font-bold flex items-center gap-1.5"></span>
+            </div>
+            <div class="flex items-center justify-between pb-2 border-b border-slate-700">
+                <span class="text-slate-400">Commercial Liability Insurance:</span>
+                <span id="modal-insurance-info" class="text-white font-semibold flex items-center gap-1.5"></span>
+            </div>
+            <div class="flex items-center justify-between pb-2 border-b border-slate-700">
+                <span class="text-slate-400">Criminal Background Check:</span>
+                <span id="modal-bg-info" class="text-emerald-400 font-semibold flex items-center gap-1.5">
+                    <i data-lucide="check-circle" class="w-3.5 h-3.5"></i> Clear & Audited
+                </span>
+            </div>
+            <div class="flex items-center justify-between">
+                <span class="text-slate-400">Equipped Service Vehicle:</span>
+                <span class="text-cyan-300 font-medium">Fully Stocked Emergency Rig</span>
+            </div>
+        </div>
+
+        <div>
+            <h4 class="text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Truck Equipment Stocked</h4>
+            <div id="modal-tools-list" class="flex flex-wrap gap-1.5"></div>
+        </div>
+
+        <button onclick="closeCredentialsModal()" class="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-semibold">
+            Close Credential Audit
+        </button>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Initialize Homeowner Page
+    document.addEventListener('DOMContentLoaded', () => {
+        initHomeownerApp();
+    });
+</script>
+{% endblock %}
