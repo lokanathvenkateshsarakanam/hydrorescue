@@ -1,8 +1,10 @@
 import os
 import json
 import random
+import threading
 from datetime import datetime
 from flask import Flask, render_template, request, jsonify, redirect, url_for
+from werkzeug.serving import run_simple
 from database import get_db_connection, init_db
 
 app = Flask(__name__)
@@ -314,7 +316,17 @@ def get_stats():
         'compliance_rate': '100% Vetted (Master & Journeyman)'
     })
 
+def run_instance(port_num):
+    print(f"HydroRescue Server listening at http://localhost:{port_num}")
+    run_simple('0.0.0.0', port_num, app, threaded=True)
+
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 8080))
-    print(f"HydroRescue Server running at http://localhost:{port}")
-    app.run(host='0.0.0.0', port=port, debug=False)
+    ports_env = os.environ.get('PORTS') or os.environ.get('PORT') or '8000,8080'
+    ports = [int(p.strip()) for p in ports_env.split(',') if p.strip()]
+
+    print(f"Starting HydroRescue simultaneously on: {[f'http://localhost:{p}' for p in ports]}")
+    for p in ports[:-1]:
+        t = threading.Thread(target=run_instance, args=(p,), daemon=True)
+        t.start()
+
+    run_instance(ports[-1])

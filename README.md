@@ -71,10 +71,11 @@ python app.py
 ```
 
 ### Step 4: Open in Your Browser
-* **Homeowner Emergency SOS:** [http://localhost:8080/](http://localhost:8080/)
-* **Plumber On-Duty Terminal:** [http://localhost:8080/plumber](http://localhost:8080/plumber)
-* **Admin Verification & Radar:** [http://localhost:8080/admin](http://localhost:8080/admin)
-* **Emergency Shutoff Guide:** [http://localhost:8080/shutoff-guide](http://localhost:8080/shutoff-guide)
+The server listens simultaneously on both **Port 8000** and **Port 8080**:
+* **Homeowner Emergency SOS:** [http://localhost:8000/](http://localhost:8000/) or [http://localhost:8080/](http://localhost:8080/)
+* **Plumber On-Duty Terminal:** [http://localhost:8000/plumber](http://localhost:8000/plumber) or [http://localhost:8080/plumber](http://localhost:8080/plumber)
+* **Admin Verification & Radar:** [http://localhost:8000/admin](http://localhost:8000/admin) or [http://localhost:8080/admin](http://localhost:8080/admin)
+* **Emergency Shutoff Guide:** [http://localhost:8000/shutoff-guide](http://localhost:8000/shutoff-guide) or [http://localhost:8080/shutoff-guide](http://localhost:8080/shutoff-guide)
 
 ---
 
